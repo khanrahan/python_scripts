@@ -13,8 +13,8 @@ Description:
 from __future__ import print_function
 import re
 
-folder_name = "Renamers"
-action_name = "Find and Replace"
+folder_name = "Edit..."
+action_name = "Find and Replace in Sequence Name"
 
 # from PySide2 import QtWidgets, QtCore
 
