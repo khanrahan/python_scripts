@@ -23,15 +23,19 @@ def replaceWildcards(string, pattern, replacement):
     https://stackoverflow.com/questions/65801340/wildcard-match-replace-and-or-multiple-string-wildcard-matching
     """
     
-    splitPattern = re.split(r'([*?])', pattern)
+    splitPattern = re.split(r'([^*?$])', pattern)
 
     regex = ""
 
     for regexPiece in splitPattern:
-        if regexPiece == "*":
+        if regexPiece == "^":
+            regex += "^"
+        elif regexPiece == "*":
             regex += "\\S*"
         elif regexPiece == "?":
             regex += "\\S"
+        elif regexPiece == "$":
+            regex += "$"
         else:
             regex += "{}".format(re.escape(regexPiece))
 
