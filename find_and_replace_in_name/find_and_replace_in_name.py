@@ -1,9 +1,6 @@
 '''
 Script Name: Find and Replace
-Script Version: 1.1
-Flame Version: 2019
-Creation Date: 01.01.19
-Update Date: 12.07.21
+Flame Version: 2020.3.1
 
 Description:
 
@@ -194,6 +191,13 @@ def main_window(selection):
 
     # Entries
     find_entry = FlameLineEdit('', window)
+    find_entry_tool_tip = ("<p><b>Find</b></p>\n"
+                           "Accepts the following special characters:<br>"
+                           "* = match any number of unknown characters<br>"
+                           "? = match a single unknown character<br>"
+                           "^ = match start<br>"
+                           "$ = match end<br>")
+    find_entry.setToolTip(find_entry_tool_tip)
 
     replace_entry = FlameLineEdit('', window)
 
