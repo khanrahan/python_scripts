@@ -191,6 +191,7 @@ def main_window(selection):
 
     # Entries
     find_entry = FlameLineEdit('', window)
+
     find_entry_tool_tip = ("<p><b>Find</b></p>\n"
                            "Accepts the following special characters:<br>"
                            "* = match any number of unknown characters<br>"
@@ -198,6 +199,10 @@ def main_window(selection):
                            "^ = match start<br>"
                            "$ = match end<br>")
     find_entry.setToolTip(find_entry_tool_tip)
+
+    find_entry_frequents = ["-RSZ_Result"]
+    find_entry_completer = QtWidgets.QCompleter(find_entry_frequents)
+    find_entry.setCompleter(find_entry_completer)
 
     replace_entry = FlameLineEdit('', window)
 
