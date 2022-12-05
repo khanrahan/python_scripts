@@ -28,7 +28,7 @@ from __future__ import print_function
 from PySide2 import QtWidgets, QtCore
 
 TITLE = "Find and Replace in Name"
-VERSION_INFO = (0, 1, 0)
+VERSION_INFO = (0, 2, 0)
 VERSION = ".".join([str(num) for num in VERSION_INFO])
 TITLE_VERSION = "{} v{}".format(TITLE, VERSION)
 
@@ -173,6 +173,73 @@ class FlameListWidget(QtWidgets.QListWidget):
                                         background-color: #474747}""")
 
 
+class FlameTokenPushButton(QtWidgets.QPushButton):
+    '''
+    Custom Qt Flame Token Push Button Widget v2.1
+
+    button_name: Text displayed on button [str]
+    token_dict: Dictionary defining tokens. {'Token Name': '<Token>'} [dict]
+    token_dest: LineEdit that token will be applied to [object]
+    button_width: (optional) default is 150 [int]
+    button_max_width: (optional) default is 300 [int]
+
+    Usage:
+
+        token_dict = {'Token 1': '<Token1>', 'Token2': '<Token2>'}
+        token_push_button = FlameTokenPushButton('Add Token', token_dict, token_dest)
+    '''
+
+    def __init__(self, button_name, token_dict, token_dest, button_width=110, button_max_width=300):
+        super(FlameTokenPushButton, self).__init__()
+        from functools import partial
+
+        self.setText(button_name)
+        self.setMinimumHeight(28)
+        self.setMinimumWidth(button_width)
+        self.setMaximumWidth(button_max_width)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.setStyleSheet("""
+            QPushButton {color: rgb(154, 154, 154);
+                         background-color: rgb(45, 55, 68);
+                         border: none;
+                         font: 14px "Discreet";
+                         padding-left: 6px;
+                         text-align: left}
+            QPushButton:hover {border: 1px solid rgb(90, 90, 90)}
+            QPushButton:disabled {color: rgb(106, 106, 106);
+                                  background-color: rgb(45, 55, 68);
+                                  border: none}
+            QPushButton::menu-indicator {subcontrol-origin: padding;
+                                         subcontrol-position: center right}
+            QToolTip {color: rgb(170, 170, 170);
+                      background-color: rgb(71, 71, 71);
+                      border: 10px solid rgb(71, 71, 71)}""")
+
+        def token_action_menu():
+
+            def insert_token(token):
+                for key, value in token_dict.items():
+                    if key == token:
+                        token_name = value
+                        token_dest.insert(token_name)
+
+            for key, value in token_dict.items():
+                token_menu.addAction(key, partial(insert_token, key))
+
+        token_menu = QtWidgets.QMenu(self)
+        token_menu.setFocusPolicy(QtCore.Qt.NoFocus)
+        token_menu.setStyleSheet("""
+            QMenu {color: rgb(154, 154, 154);
+                   background-color: rgb(45, 55, 68);
+                   border: none; font: 14px "Discreet"}
+            QMenu::item:selected {color: rgb(217, 217, 217);
+                                  background-color: rgb(58, 69, 81)}""")
+
+        self.setMenu(token_menu)
+
+        token_action_menu()
+
+
 class FindReplace(object):
     """Find and replace in name for selected objects in Flame. """
 
@@ -189,6 +256,15 @@ class FindReplace(object):
         self.message(TITLE_VERSION)
         self.message("Script called from {}".format(__file__))
 
+        self.tool_tip_find = ("<p><b>Find</b></p>\n"
+                              "Accepts the following wildcards:<br>"
+                              "* = match any number of characters<br>"
+                              "? = match a single character<br>"
+                              "^ = match start<br>"
+                              "$ = match end<br>")
+
+        self.wildcards = {"Match All": "*", "Match Any": "?", "Match Start": "^",
+            "Match End": "$"}
         self.main_window()
 
 
@@ -233,11 +309,10 @@ class FindReplace(object):
         # and PyClip.name.set_value() does not take unicode
         self.find = self.find_line_edit.text().encode("ascii", "ignore")
 
-        if self.replace:  # otherwise it will replace with nothing
-            self.names_new = [self.replace_wildcards(item, self.find, self.replace)
-                              for item in self.names]
-            self.list_scroll.clear()
-            self.list_scroll.addItems(self.names_new)
+        self.names_new = [self.replace_wildcards(item, self.find, self.replace)
+                          for item in self.names]
+        self.list_scroll.clear()
+        self.list_scroll.addItems(self.names_new)
 
         if not self.find:
             self.list_scroll.clear()
@@ -251,15 +326,11 @@ class FindReplace(object):
         # and PyClip.name.set_value() does not take unicode
         self.replace = self.replace_line_edit.text().encode("ascii", "ignore")
 
-        if self.find:  # otherwise it will replace with nothing
+        if self.find:
             self.names_new = [self.replace_wildcards(item, self.find, self.replace)
                               for item in self.names]
             self.list_scroll.clear()
             self.list_scroll.addItems(self.names_new)
-
-        if not self.replace:
-            self.list_scroll.clear()
-            self.list_scroll.addItems(self.names)  # return to starting state
 
 
     def update_names(self):
@@ -296,7 +367,7 @@ class FindReplace(object):
             self.message("Cancelled!")
 
         self.window = QtWidgets.QWidget()
-        self.window.setMinimumSize(700, 130)
+        self.window.setMinimumSize(800, 130)
         self.window.setWindowTitle(TITLE_VERSION)
         self.window.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -313,13 +384,7 @@ class FindReplace(object):
 
         # Line Edits
         self.find_line_edit = FlameLineEdit('', self.window)
-        self.find_line_edit_tool_tip = ("<p><b>Find</b></p>\n"
-                                        "Accepts the following special characters:<br>"
-                                        "* = match any number of unknown characters<br>"
-                                        "? = match a single unknown character<br>"
-                                        "^ = match start<br>"
-                                        "$ = match end<br>")
-        self.find_line_edit.setToolTip(self.find_line_edit_tool_tip)
+        self.find_line_edit.setToolTip(self.tool_tip_find)
         self.find_line_edit.setToolTipDuration(999999)
 
         self.find_line_edit_frequents = ["-RSZ_Result"]
@@ -329,6 +394,10 @@ class FindReplace(object):
 
         self.replace_line_edit = FlameLineEdit(self.replace, self.window)
         self.replace_line_edit.textChanged.connect(self.update_replace)
+
+        # Token Push Button
+        self.token_push_button = FlameTokenPushButton('Wildcards', self.wildcards,
+                self.find_line_edit)
 
         # Buttons
         self.ok_btn = FlameButton('Ok', ok_button, self.window)
@@ -347,6 +416,7 @@ class FindReplace(object):
 
         self.gridbox1.addWidget(self.find_label, 0, 0)
         self.gridbox1.addWidget(self.find_line_edit, 0, 1)
+        self.gridbox1.addWidget(self.token_push_button, 0, 2)
         self.gridbox1.addWidget(self.replace_label, 1, 0)
         self.gridbox1.addWidget(self.replace_line_edit, 1, 1)
 
