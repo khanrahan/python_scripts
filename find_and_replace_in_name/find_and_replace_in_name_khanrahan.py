@@ -28,7 +28,7 @@ from __future__ import print_function
 from PySide2 import QtWidgets, QtCore
 
 TITLE = "Find and Replace in Name"
-VERSION_INFO = (0, 2, 0)
+VERSION_INFO = (0, 3, 0)
 VERSION = ".".join([str(num) for num in VERSION_INFO])
 TITLE_VERSION = "{} v{}".format(TITLE, VERSION)
 
@@ -352,12 +352,23 @@ class FindReplace(object):
                                                    self.names_new[num]))
 
 
+    @staticmethod
+    def refresh():
+        """Necessary after changing attributes to have the changes show up on the
+        Desktop.  Otherwise, the script runs, but the change will not be shown on the
+        thumbnail until you tap on the UI."""
+
+        import flame
+        flame.execute_shortcut("Refresh Thumbnails")
+
+
     def main_window(self):
         """ """
 
         def ok_button():
 
             self.update_names()
+            self.refresh()
             self.window.close()
             self.message("Done!")
 
